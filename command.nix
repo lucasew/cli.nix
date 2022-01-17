@@ -1,16 +1,12 @@
 {lib, ...}@args:
 let
   inherit (lib) mkOption types mkIf;
+  typesAvailable = [
+    "str" # string
+    "int" # integer number
+  ];
+  defaultType = "str";
 in rec {
-  type = mkOption {
-    description = "Argument type";
-    type = types.enum [
-      "string" # plain string
-      "symbol" # alphanumeric with no spaces
-      "number" # number ¯\_(ツ)_/¯ 
-    ];
-    default = "string";
-  };
   flag = {name, config, ...}: {
     config = {
       key = name;
@@ -21,7 +17,21 @@ in rec {
         type = types.str;
         internal = true;
       };
-      inherit type;
+      singleKeyword = mkOption {
+        description = "What is the single character flag keyword? Ex: h -> -h";
+        type = types.nullOr types.str;
+        default = if (builtins.stringLength name) == 1 then name else null;
+      };
+      composedKeyword = mkOption {
+        description = "What is the word sized flag keyword? Ex: help -> --help";
+        type = types.nullOr types.str;
+        default = if (builtins.stringLength name) > 1 then name else null;
+      };
+      flagType = mkOption {
+        description = "Type of the flag value";
+        type = types.enum typesAvailable;
+        default = defaultType;
+      };
       description = mkOption {
         description = "Flag description for the man page";
         type = types.str;
@@ -30,11 +40,15 @@ in rec {
   };
   argument = {...}: {
     options = {
-      name = {
+      name = mkOption {
         description = "Name of the argument";
         type = types.str;
       };
-      inherit type;
+      argumentType = mkOption {
+        description = "Type of the positional parameter value";
+        type = types.enum typesAvailable;
+        default = defaultType;
+      };
     };
   };
   command = {...}@args: {

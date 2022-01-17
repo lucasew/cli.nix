@@ -2,9 +2,12 @@
 let
   inherit (lib) mkOption types optional;
 in {
+  imports = [
+    ./gen
+  ];
   options = {
     target = mkOption {
-      type = types.attrsOf types.package;
+      type = types.attrsOf types.str;
       default = {};
       visible = false;
     };
